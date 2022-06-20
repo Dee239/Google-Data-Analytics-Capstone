@@ -1,0 +1,385 @@
+---
+title: "Google Data Analytics Capstone Project"
+author: "Darius Parker"
+date: '2022-06-18'
+output:
+  pdf_document: default
+  html_document: default
+---
+
+
+This document is for the Google Data Analytics Capstone project. It is an interactive notebook that will guide the user through the background of our problem, the data obtained and processes used to analyze and share our findings.
+
+
+First install and import packages. Because the packages are already installed, the install commands are commented out below.
+
+```{r install packages}
+#install.packages('tidyverse')
+#install.packages('gtable')
+library(tidyverse)
+library(readxl)
+
+```
+
+
+
+Next import the excel files downloaded from - https://divvy-tripdata.s3.amazonaws.com/index.html (Please note that these were originally csv files which were converted to excel files manually)
+
+Please note that you may need to edit the file path to your own path for the document to run without errors:
+
+```{r import files}
+cycle_file_1 <- read_excel("C:/Users/dariu/Desktop/capstone/xls/202004-divvy-tripdata.xlsx")
+cycle_file_2 <- read_excel("C:/Users/dariu/Desktop/capstone/xls/202005-divvy-tripdata.xlsx")
+cycle_file_3 <- read_excel("C:/Users/dariu/Desktop/capstone/xls/202006-divvy-tripdata.xlsx")
+cycle_file_4 <- read_excel("C:/Users/dariu/Desktop/capstone/xls/202007-divvy-tripdata.xlsx")
+cycle_file_5 <- read_excel("C:/Users/dariu/Desktop/capstone/xls/202008-divvy-tripdata.xlsx")
+cycle_file_6 <- read_excel("C:/Users/dariu/Desktop/capstone/xls/202009-divvy-tripdata.xlsx")
+cycle_file_7 <- read_excel("C:/Users/dariu/Desktop/capstone/xls/202010-divvy-tripdata.xlsx")
+cycle_file_8 <- read_excel("C:/Users/dariu/Desktop/capstone/xls/202011-divvy-tripdata.xlsx")
+cycle_file_9 <- read_excel("C:/Users/dariu/Desktop/capstone/xls/202012-divvy-tripdata.xlsx")
+cycle_file_10 <- read_excel("C:/Users/dariu/Desktop/capstone/xls/202101-divvy-tripdata.xlsx")
+cycle_file_11 <- read_excel("C:/Users/dariu/Desktop/capstone/xls/202102-divvy-tripdata.xlsx")
+cycle_file_12 <- read_excel("C:/Users/dariu/Desktop/capstone/xls/202103-divvy-tripdata.xlsx")
+
+
+```
+
+
+
+Lets preview the first file.
+```{r}
+head(cycle_file_1)
+```
+
+Lets also preview the second file.
+
+```{r}
+head(cycle_file_2)
+```
+
+Create a list containing the dataframes imported above. 
+
+```{r}
+df_list <- list(cycle_file_1, cycle_file_2, cycle_file_3, cycle_file_4, cycle_file_5, cycle_file_6, cycle_file_7,
+                cycle_file_8, cycle_file_9, cycle_file_10, cycle_file_11, cycle_file_12)
+```
+
+
+Next, create an empty dataframe. 
+```{r}
+
+# creating a matrix with 0 rows 
+# and columns 
+mat = matrix(ncol = 0, nrow = 0)
+  
+# converting the matrix to data 
+# frame
+df=data.frame(mat)
+print ("Data Frame")
+print (df)
+  
+# check for the dimensions of data 
+# frame
+print("Dimensions of data frame")
+dim(df)
+```
+
+Next create a "for" loop to join each of the dataframes. We use the "rbind" function to combine the dataframes. 
+
+```{r}
+for (df2 in df_list) {
+  if(length(df) == 0)
+  {
+     df <- df2
+  }else{
+    df <- rbind(df, df2)
+  }
+    
+  }
+
+```
+
+We can now view a summary of the dataframe using the "str" function. 
+
+```{r}
+str(df)
+```
+
+Now, lets create the "ride_length" column which gives the duration of the passenger ride. We ake the "started_at" column and subtract it from "ended_at" column.
+
+```{r}
+df$ride_length <- df$ended_at - df$started_at
+```
+
+Now preview the updated dataframe. It now includes the "ride_length" column.
+
+```{r}
+head(df)
+```
+
+Next, we add a column to show which day of the week the ride took place. The "weekday" column can be created using the "lubridate" package. Since we want Sunday to be day 1, we use "week_start = 7" parameter to set Sunday to day 1. Also, getting the month and hour for each passenger ride. 
+```{r}
+library(lubridate)
+df$weekday <- wday(df$started_at, week_start=7)
+df$month <- month(df$started_at)
+df$hour <- hour(df$started_at)
+```
+Now, lets preview the dataframe again and see we now have a "weekday", "month", and "hour" column. 
+
+
+```{r}
+head(df)
+```
+
+Next get the month the ride was taken from the "started at" column.
+```{r}
+
+```
+
+
+
+Now lets remove any duplicate rows. We will store this in a new dataframe called "final_df".
+
+```{r}
+#remove duplicate rows across entire data frame
+final_df <- df[!duplicated(df), ]
+```
+
+
+Lets also remove any rows with missing values.
+
+```{r}
+final_df = na.omit(final_df)
+```
+
+
+Lets see how our dataframe has changed now that we have removed duplicates and rows with missing values. 
+```{r}
+str(final_df)
+```
+We see that we did not have any duplicates or missing values! This is good. 
+
+Lets sort the ride by date and check that we have the last 12 months. 
+
+```{r}
+final_df <- final_df %>% arrange(final_df$started_at)
+```
+
+```{r}
+head(final_df)
+```
+
+
+```{r}
+tail(final_df)
+```
+
+Great! We see that we have data for April 1, 2020 - March 31, 2021. 
+
+Calculate the mean of ride_length
+```{r}
+
+ride_length_mean <- mean(final_df$ride_length)
+print(ride_length_mean)
+
+```
+Convert to type "float"
+```{r}
+
+ride_length_mean <- as.double(ride_length_mean)
+
+```
+
+Convert from seconds to minutes
+```{r}
+ride_length_mean <- ride_length_mean / 60
+```
+
+```{r}
+ride_length_mean
+```
+We see that the average duration of a trip is 25.22 minutes. 
+
+
+
+```{r}
+ride_length_max <- max(final_df$ride_length)
+ride_length_max <- as.double(ride_length_max)
+```
+
+```{r}
+ride_length_max <- ride_length_max / 60
+
+```
+
+```{r}
+ride_length_max
+
+```
+We see that the longest duration of a trip was 58720 minutes, over 40 days. 
+
+
+Next, lets see how many rides we have for each weekday. We can use the "table" function for this. Note that 1 = Sunday, 2 = Monday and so on. 
+
+```{r}
+table(final_df$weekday)
+```
+We see that the Mode is Saturday (7) with a value of 625627 rides.
+
+```{r}
+table(final_df$hour)
+```
+
+We see here that peak hours are between 11am - 7:00pm. 
+
+
+Now, lets split the dataframes into two dataframes, one with casual riders and the other dataframe with members. We can do this with the dplyr library. Also
+get the number of casual riders and members by counting the number of rows in each dataframe using "nrow" function.
+
+```{r}
+unique(final_df$member_casual)
+```
+```{r}
+library(dplyr)
+member_df <- filter(final_df, member_casual == "member")
+n_members <- as.double(nrow(member_df))
+n_members
+```
+
+```{r}
+casual_df <- filter(final_df, member_casual == "casual")
+n_casual <- as.double(nrow(casual_df))
+n_casual
+```
+
+```{r}
+total_rides <- n_members + n_casual
+total_rides
+```
+
+
+```{r}
+n_members / total_rides
+```
+We see that we have a total of 3,294,691 rides, 58% of which were members. 
+
+```{r}
+cas_ride_length_mean <- mean(casual_df$ride_length)
+cas_ride_length_mean <- as.double(cas_ride_length_mean)
+cas_ride_length_mean / 60
+```
+We see that the average duration for a ride for casual riders is about 44 minutes.
+
+```{r}
+mem_ride_length_mean <- mean(member_df$ride_length)
+mem_ride_length_mean <- as.double(mem_ride_length_mean)
+mem_ride_length_mean / 60
+```
+The average duration for a ride for members is about 12 minutes.
+
+
+
+Next, lets see how many rides we have for each weekday. We can use the "table" function for this. Note that 1 = Monday, 2 = Tuesday and so on. 
+
+```{r}
+table(member_df$weekday)
+```
+```{r}
+barplot(table(member_df$weekday), main="Member Rides by Weekday",
+xlab="Weekday",
+ylab="Member Ride Count",
+border="black",
+col="blue")
+```
+
+
+
+We see that the Mode is Sunday (7) with a values of 625627 rides.
+
+```{r}
+table(member_df$hour)
+```
+
+```{r}
+barplot(table(member_df$hour), main="Member Rides by Hour",
+xlab="Hour",
+ylab="Member Ride Count",
+border="black",
+col="blue")
+```
+
+
+
+Next, lets see how many rides we have for each weekday. We can use the "table" function for this. Note that 1 = Monday, 2 = Tuesday and so on. 
+
+```{r}
+table(casual_df$weekday)
+```
+```{r}
+barplot(table(casual_df$weekday), main="Casual Rides by Weekday",
+xlab="Weekday",
+ylab="Ride Count",
+border="black",
+col="blue")
+```
+
+
+
+
+We see that the Mode is Sunday (7) with a values of 625627 rides.
+
+
+```{r}
+table(casual_df$hour)
+```
+
+```{r}
+barplot(table(casual_df$hour), main="Casual Rides by Hour",
+xlab="Hour",
+ylab="Ride Count",
+border="black",
+col="blue")
+```
+
+
+
+```{r}
+table(casual_df$rideable_type)
+```
+
+
+```{r}
+pie(table(casual_df$rideable_type))
+```
+
+
+
+```{r}
+table(member_df$rideable_type)
+```
+```{r}
+pie(table(member_df$rideable_type))
+```
+
+We can see that there is not much difference betrween the types of rides casual riders and members take. Both primarily used docked bikes. The day of the week is the biggest difference, with members consistently taking rides through the week vs Sundays being most popular for casual riders. 
+
+
+
+
+
+
+
+We can now use our finding and input them into excel for better visualizaitons and a presentation. Also export the combined dataframe to a CSV file. 
+
+
+```{r}
+#install.packages('writexl')
+# library("writexl")
+# write_xlsx(final_df, "C:\\Users\\dariu\\Desktop\\capstone\\r_combined_file.xlsx")
+write.csv(final_df,"C:\\Users\\dariu\\Desktop\\capstone\\cycle_trips_combined.csv")
+```
+
+
+
+
+
